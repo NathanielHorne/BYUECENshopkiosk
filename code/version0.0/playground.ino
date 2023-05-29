@@ -85,38 +85,75 @@ void setup() {
 
   // Initialize LCD screen
   LCD.init();
+  
+  // Clears the LCD screen
   LCD.clear();
+  
+  // Turns on the LCD backlight
   LCD.backlight();
+  
+  // Moves the cursur to the upper left corner of the screen
   LCD.setCursor(0, 0);
+  
+  // Prints "Welcome!" starting at the upper left corner 
   LCD.println("Welcome!");
 }
 
 void loop() {
+  // Makes it so the mesh network is perpetuated
   mesh.update();
+
+  // Clears the LCD screen
   LCD.clear();
+  
+  // Prints "Welcome!" starting at the upper left corner 
   LCD.println("Welcome!");
+  
+  // Main loop. Runs simple debouncing code
   while(true) {
+    
+    // Starts the debouncing program by saving the time when the button is
+    // either pressed or "unpressed"
     if (digitalRead(BTN_PIN) != btn_status) {
       debounce_time = millis();
     }
+    
+    // If the button is still pressed after the debounce_delay, turn the red LED on
+    // and begin the help loop
     if (((millis() - debounce_time) > debounce_delay) && (digitalRead(BTN_PIN) == LOW)) {
       btn_status = HIGH;
       digitalWrite(LED1, btn_status);
       help_status = true;
       break;
     }
+    
+    // If the button is "unpressed," then turn the red LED off 
     if (((millis() - debounce_time) > debounce_delay) && (digitalRead(BTN_PIN) == HIGH)) {
       btn_status = LOW;
       digitalWrite(LED1, btn_status);
     }
   }
+  
   while(help_status) {
+    
+    // Clear the LCD
     LCD.clear();
+    
+    // Prints a help message on the serial monitor
     Serial.printf("EGADS!!! I need help!\n");
+    
+    // Prints a help message on the LCD screen
     LCD.println("OH NO! HELP NEEDED!");
+    
+    // Turns the green LED on
     digitalWrite(LED2, HIGH);
+    
     delay(500);
+    
+    // Turns the green LED off
     digitalWrite(LED2, LOW);
+    
+    // Goes back to the original loop
     break;
   }
 }
