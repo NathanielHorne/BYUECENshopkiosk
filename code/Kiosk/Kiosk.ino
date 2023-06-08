@@ -6,8 +6,7 @@
 String mesg = "Press the button to get help!";
 
 // Setting the pins for the LEDs and the button
-#define LED1 2
-#define LED2 4
+#define LED1 0
 #define BTN_PIN 26
 
 // Setup LCD I2C display
@@ -32,7 +31,6 @@ void setup() {
   
   // Defined the two led pins as output and the button pin as a type of input
   pinMode(LED1, OUTPUT);
-  pinMode(LED2, OUTPUT);
   pinMode(BTN_PIN, INPUT_PULLUP);
   
   // Initialize LCD screen
@@ -50,7 +48,10 @@ void setup() {
 }
 
 void loop() {
-  
+  digitalWrite(LED1, HIGH);
+  delay(800);
+  digitalWrite(LED1, LOW);
+  delay(800);
 }
 
 void *print_screen(void *arg) {
