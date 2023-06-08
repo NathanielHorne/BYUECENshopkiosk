@@ -31,7 +31,7 @@ void setup() {
   
   // Defined the two led pins as output and the button pin as a type of input
   pinMode(LED1, OUTPUT);
-  pinMode(BTN_PIN, INPUT_PULLUP);
+  pinMode(BTN_PIN, INPUT);
   
   // Initialize LCD screen
   LCD.init();
@@ -48,10 +48,7 @@ void setup() {
 }
 
 void loop() {
-  digitalWrite(LED1, HIGH);
-  delay(800);
-  digitalWrite(LED1, LOW);
-  delay(800);
+  digitalWrite(LED1, digitalRead(BTN_PIN));
 }
 
 void *print_screen(void *arg) {
@@ -76,9 +73,7 @@ void *print_screen(void *arg) {
 
 void *serial_print(void *arg) {
   while(true) {
-    for(int i = 0; i <= 100; i++) {
-      Serial.println(i);
-      delay(1000);
-    }
+    Serial.println(digitalRead(BTN_PIN));
+    delay(500);
   }
 }
