@@ -2,8 +2,12 @@
 #include <esp_pthread.h>
 #include <LiquidCrystal_I2C.h>
 
+// Define magic numbers
+#define SERIAL_BAUD_RATE 9600
+#define DELAY 1000
+
 //Welcome string
-String mesg = "Press the button to get help!";
+String welcome_mesg = "Press the button to get help!";
 
 // Setting the pins for the LEDs and the button
 #define LED1 0
@@ -27,7 +31,7 @@ void *print_screen(void *arg);
 void *serial_print(void *arg);
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(SERIAL_BAUD_RATE);
   
   // Defined the two led pins as output and the button pin as a type of input
   pinMode(LED1, OUTPUT);
@@ -53,27 +57,27 @@ void loop() {
 
 void *print_screen(void *arg) {
   while(true) {
-    for(int i = 0; i < mesg.length() - 1; i++) {
+    for(int i = 0; i < welcome_mesg.length() - 1; i++) {
       LCD.clear();
       LCD.print("Welcome!");
       LCD.setCursor(0, 1);
-      if ((i + 15) > mesg.length()) {
+      if ((i + (LCD_COLS - 1)) > welcome_mesg.length()) {
         break;
       }
       else {
         for(int j = i; j < i + 16; j++){    
-          LCD.print(mesg[j]);
+          LCD.print(welcome_mesg[j]);
         }
       }
-      delay(250);
+      delay(DELAY / 4);
     }
-    delay(1000);
+    delay(DELAY);
   }
 }
 
 void *serial_print(void *arg) {
   while(true) {
     Serial.println(digitalRead(BTN_PIN));
-    delay(500);
+    delay(DELAY / 2);
   }
 }
