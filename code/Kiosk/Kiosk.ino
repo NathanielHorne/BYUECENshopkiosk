@@ -4,7 +4,7 @@
 
 // Define magic numbers
 #define SERIAL_BAUD_RATE 9600
-#define DELAY 1001
+#define DELAY 1000
 
 //Welcome string
 String welcome_mesg = "Press the button to get help!";
@@ -96,7 +96,7 @@ void mywait(int timeInMs)
 
     gettimeofday(&now,NULL);
 
-
+    // Edited this one line to work more like the original wait function
     timeToWait.tv_sec = now.tv_sec+(timeInMs/1000UL);
     timeToWait.tv_nsec = (now.tv_usec+1000UL*timeInMs)*1000UL;
 
