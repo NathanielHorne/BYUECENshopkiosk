@@ -7,7 +7,9 @@
 #define DELAY 1000
 
 //Welcome string
-String welcome_mesg = "Press the button to get help!";
+String standby_mesg = "Press the button to get help!";
+String help_mesg = "EGADS! I need help!";
+String current_mesg = String(256);
 
 // Setup time wait function
 pthread_mutex_t fakeMutex = PTHREAD_MUTEX_INITIALIZER;
@@ -62,16 +64,16 @@ void loop() {
 
 void *print_screen(void *arg) {
   while(true) {
-    for(int i = 0; i < welcome_mesg.length() - 1; i++) {
+    for(int i = 0; i < current_mesg.length() - 1; i++) {
       LCD.clear();
       LCD.print("Welcome!");
       LCD.setCursor(0, 1);
-      if ((i + (LCD_COLS - 1)) > welcome_mesg.length()) {
+      if ((i + (LCD_COLS - 1)) > current_mesg.length()) {
         break;
       }
       else {
         for(int j = i; j < i + 16; j++){    
-          LCD.print(welcome_mesg[j]);
+          LCD.print(current_mesg[j]);
         }
       }
       mywait(DELAY / 3);
@@ -82,8 +84,14 @@ void *print_screen(void *arg) {
 
 void *serial_print(void *arg) {
   while(true) {
-    Serial.println(digitalRead(BTN_PIN));
-    mywait(DELAY);
+    if(digitalRead(BTN_PIN)) {
+      current_mesg = help_mesg;
+      mywait(DELAY * 15);
+    }
+    else {
+      current_mesg = standby_mesg;
+    }
+    mywait(DELAY / 10);
   }
 }
 
