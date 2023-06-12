@@ -4,10 +4,15 @@
 
 // Define magic numbers
 #define SERIAL_BAUD_RATE 9600
-#define DELAY 1000
+#define DELAY 1001
 
 //Welcome string
 String welcome_mesg = "Press the button to get help!";
+
+// Setup time wait function
+pthread_mutex_t fakeMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t fakeCond = PTHREAD_COND_INITIALIZER;
+
 
 // Setting the pins for the LEDs and the button
 #define LED1 0
@@ -21,14 +26,14 @@ LiquidCrystal_I2C LCD = LiquidCrystal_I2C(0x27, LCD_COLS, LCD_ROWS);
 
 // Setup global variables for blinking function
 int debounce_time = 0;
-unsigned long debounce_delay = 50;
+unsigned long debounce_mywait = 50;
 int btn_status = HIGH;
 bool help_status = false;
 
 // Function stubs
 void *print_screen(void *arg);
-
 void *serial_print(void *arg);
+void mywait(int timeInMs);
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
@@ -69,15 +74,33 @@ void *print_screen(void *arg) {
           LCD.print(welcome_mesg[j]);
         }
       }
-      delay(DELAY / 4);
+      mywait(DELAY / 3);
     }
-    delay(DELAY);
+    mywait(DELAY / 2);
   }
 }
 
 void *serial_print(void *arg) {
   while(true) {
     Serial.println(digitalRead(BTN_PIN));
-    delay(DELAY / 2);
+    mywait(DELAY);
   }
+}
+
+// Credit for function: Furquan and andrewrk in Stack Overflow thread https://stackoverflow.com/questions/1486833/pthread-cond-timedwait
+void mywait(int timeInMs)
+{
+    struct timespec timeToWait;
+    struct timeval now;
+    int rt;
+
+    gettimeofday(&now,NULL);
+
+
+    timeToWait.tv_sec = now.tv_sec+(timeInMs/1000UL);
+    timeToWait.tv_nsec = (now.tv_usec+1000UL*timeInMs)*1000UL;
+
+    pthread_mutex_lock(&fakeMutex);
+    rt = pthread_cond_timedwait(&fakeCond, &fakeMutex, &timeToWait);
+    pthread_mutex_unlock(&fakeMutex);
 }
