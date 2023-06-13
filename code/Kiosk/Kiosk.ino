@@ -40,7 +40,8 @@ bool help_status = false;
 void *print_screen(void *arg);
 void *serial_print(void *arg);
 void mywait(int timeInMs);
-void better_printer(char *message);
+void better_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2);
+void sub_printer(LiquidCrystal_I2C LCD_target, int line_num, char *message);
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
@@ -58,13 +59,13 @@ void setup() {
   LCD_2.clear();
   LCD_2.backlight();
   
-  LCD_1.setCursor(0, 0);
-  LCD_1.print("Welcome!");
+  better_printer(LCD_1, "Welcome!", " ");
 
-  LCD_2.setCursor(0, 0);
-  LCD_2.print("You are a valued");
-  LCD_2.setCursor(0, 1);
-  LCD_2.print("Student");
+  better_printer(LCD_2, "You are a valued", "Student");
+//  LCD_2.setCursor(0, 0);
+//  LCD_2.print("You are a valued");
+//  LCD_2.setCursor(0, 1);
+//  LCD_2.print("Student");
 
   
 
@@ -81,7 +82,7 @@ void loop() {
 
 void *print_screen(void *arg) {
   while(true) {
-    better_printer(current_mesg);
+    better_printer(LCD_1, "Welcome to the Electrical Engineering Experiential Learning Center",current_mesg);
     mywait(DELAY / 2);
   }
 }
@@ -117,19 +118,33 @@ void mywait(int timeInMs)
     pthread_mutex_unlock(&fakeMutex);
 }
 
-void better_printer(char *message) {
-  for(int i = 0; i < strlen(message) - 1; i++) {
-      LCD_1.clear();
-      LCD_1.print("Welcome!");
-      LCD_1.setCursor(0, 1);
+void better_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2) {
+  LCD_target.clear();
+  LCD_target.setCursor(0, 0);
+  LCD_target.print(line_1);
+  LCD_target.setCursor(0, 1);
+  LCD_target.print(line_2);
+  sub_printer(LCD_target, 0, line_1);
+//  sub_printer(LCD_target, 1, line_2);
+}
+
+void sub_printer(LiquidCrystal_I2C LCD_target, int line_num, char *message) {
+    LCD_target.setCursor(0, line_num);
+  if (strlen(message) < LCD_COLS + 1) {
+    LCD_target.print(message);
+  }
+  else {
+    for(int i = 0; i < strlen(message) - 1; i++) {
+      LCD_target.setCursor(0, line_num);
       if ((i + (LCD_COLS - 1)) > strlen(message)) {
         break;
       }
       else {
-        for(int j = i; j < i + 16; j++){    
-          LCD_1.print(message[j]);
+        for(int j = i; j < i + LCD_COLS; j++){    
+          LCD_target.print(message[j]);
         }
       }
       mywait(DELAY / 3);
+    } 
   }
 }
