@@ -24,7 +24,7 @@ pthread_cond_t fakeCond = PTHREAD_COND_INITIALIZER;
 // NOTE: the hex address must be changed in an actual implementation
 #define LCD_COLS 16
 #define LCD_ROWS 2
-LiquidCrystal_I2C LCD = LiquidCrystal_I2C(0x27, LCD_COLS, LCD_ROWS);
+LiquidCrystal_I2C LCD_1 = LiquidCrystal_I2C(0x27, LCD_COLS, LCD_ROWS);
 
 // Setup global variables for blinking function
 int debounce_time = 0;
@@ -45,11 +45,11 @@ void setup() {
   pinMode(BTN_PIN, INPUT);
   
   // Initialize LCD screen
-  LCD.init();
-  LCD.clear();
-  LCD.backlight();
-  LCD.setCursor(0, 0);
-  LCD.println("Welcome!");
+  LCD_1.init();
+  LCD_1.clear();
+  LCD_1.backlight();
+  LCD_1.setCursor(0, 0);
+  LCD_1.println("Welcome!");
 
   pthread_t display;
   pthread_create(&display, NULL, print_screen, NULL);
@@ -65,15 +65,15 @@ void loop() {
 void *print_screen(void *arg) {
   while(true) {
     for(int i = 0; i < current_mesg.length() - 1; i++) {
-      LCD.clear();
-      LCD.print("Welcome!");
-      LCD.setCursor(0, 1);
+      LCD_1.clear();
+      LCD_1.print("Welcome!");
+      LCD_1.setCursor(0, 1);
       if ((i + (LCD_COLS - 1)) > current_mesg.length()) {
         break;
       }
       else {
         for(int j = i; j < i + 16; j++){    
-          LCD.print(current_mesg[j]);
+          LCD_1.print(current_mesg[j]);
         }
       }
       mywait(DELAY / 3);
