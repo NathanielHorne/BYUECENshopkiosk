@@ -12,6 +12,7 @@
 //Welcome string
 char standby_mesg[MAX_STR_LEN] = "Press the button to get help!";
 char help_mesg[MAX_STR_LEN] = "EGADS! I need help!";
+char welcome_bar[MAX_STR_LEN] = "Welcome to the Electrical Engineering Experiential Learning Center";
 char current_mesg[MAX_STR_LEN];
 
 // Setup time wait function
@@ -23,8 +24,7 @@ pthread_cond_t fakeCond = PTHREAD_COND_INITIALIZER;
 #define LED1 0
 #define BTN_PIN 26
 
-// Setup LCD I2C display
-// NOTE: the hex address must be changed in an actual implementation
+// Setup LCD I2C displays
 #define LCD_COLS 16
 #define LCD_ROWS 2
 LiquidCrystal_I2C LCD_1 = LiquidCrystal_I2C(0x27, LCD_COLS, LCD_ROWS);
@@ -36,12 +36,13 @@ unsigned long debounce_mywait = 50;
 int btn_status = HIGH;
 bool help_status = false;
 
-// Function stubs
+// Function stubs for picky online programs
 void *print_screen(void *arg);
-void *serial_print(void *arg);
+void *btn_reader(void *arg);
 void mywait(int timeInMs);
 void better_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2);
-void sub_printer(LiquidCrystal_I2C LCD_target, int line_num, char *message);
+void line_scroller(LiquidCrystal_I2C LCD_target, int line_num, char *message);
+void initial_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2);
 
 void setup() {
   Serial.begin(SERIAL_BAUD_RATE);
@@ -73,7 +74,7 @@ void setup() {
   pthread_create(&display, NULL, print_screen, NULL);
 
   pthread_t printert;
-  pthread_create(&printert, NULL, serial_print, NULL);
+  pthread_create(&printert, NULL, btn_reader, NULL);
 }
 
 void loop() {
@@ -82,12 +83,12 @@ void loop() {
 
 void *print_screen(void *arg) {
   while(true) {
-    better_printer(LCD_1, "Welcome to the Electrical Engineering Experiential Learning Center",current_mesg);
+    better_printer(LCD_1, welcome_bar, current_mesg);
     mywait(DELAY / 2);
   }
 }
 
-void *serial_print(void *arg) {
+void *btn_reader(void *arg) {
   while(true) {
     if(digitalRead(BTN_PIN)) {
       strcpy(current_mesg, help_mesg);
@@ -119,16 +120,13 @@ void mywait(int timeInMs)
 }
 
 void better_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2) {
-  LCD_target.clear();
-  LCD_target.setCursor(0, 0);
-  LCD_target.print(line_1);
-  LCD_target.setCursor(0, 1);
-  LCD_target.print(line_2);
-  sub_printer(LCD_target, 0, line_1);
-//  sub_printer(LCD_target, 1, line_2);
+  initial_printer(LCD_target, line_1, line_2);
+  line_scroller(LCD_target, 0, line_1);
+  initial_printer(LCD_target, line_1, line_2);
+  line_scroller(LCD_target, 1, line_2);
 }
 
-void sub_printer(LiquidCrystal_I2C LCD_target, int line_num, char *message) {
+void line_scroller(LiquidCrystal_I2C LCD_target, int line_num, char *message) {
     LCD_target.setCursor(0, line_num);
   if (strlen(message) < LCD_COLS + 1) {
     LCD_target.print(message);
@@ -147,4 +145,12 @@ void sub_printer(LiquidCrystal_I2C LCD_target, int line_num, char *message) {
       mywait(DELAY / 3);
     } 
   }
+}
+
+void initial_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2) {
+  LCD_target.clear();
+  LCD_target.setCursor(0, 0);
+  LCD_target.print(line_1);
+  LCD_target.setCursor(0, 1);
+  LCD_target.print(line_2);
 }
