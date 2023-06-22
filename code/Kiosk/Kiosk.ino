@@ -19,6 +19,10 @@
 #define LCD_3_ADD 0x25
 #define LCD_4_ADD 0x24
 
+// Setup time wait function
+pthread_mutex_t fakeMutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t fakeCond = PTHREAD_COND_INITIALIZER;
+
 // Setup struct for later threaded function
 typedef struct {
   
@@ -63,7 +67,8 @@ void setup() {
 
   // Create array of display_data_t structs
   // This is good for when we pass arguments to threaded functions in the future.
-  disp_data_t disp_data[TOTAL_ROWS];
+  // disp_data_t *disp_data = (disp_data_t *)calloc(TOTAL_ROWS, sizeof(disp_data));
+    disp_data_t disp_data[TOTAL_ROWS];
 
   /* 
    *  For loop that assigns each struct (carrying the data for each line)
