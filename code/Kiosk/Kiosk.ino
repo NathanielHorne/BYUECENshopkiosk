@@ -1,109 +1,123 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <esp_pthread.h>
 #include <LiquidCrystal_I2C.h>
 
 // Define magic numbers
+#define TOTAL_ROWS 9
 #define SERIAL_BAUD_RATE 9600
 #define DELAY 1000
 #define MAX_STR_LEN 256
-
-//Welcome string
-char standby_mesg[MAX_STR_LEN] = "Press the button to get help!";
-char help_mesg[MAX_STR_LEN] = "EGADS! I need help!";
-char welcome_bar[MAX_STR_LEN] = "Welcome to the Electrical Engineering Experiential Learning Center";
-char current_mesg[MAX_STR_LEN];
-
-// Setup time wait function
-pthread_mutex_t fakeMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t fakeCond = PTHREAD_COND_INITIALIZER;
-
-
-// Setting the pins for the LEDs and the button
-#define LED1 0
-#define BTN_PIN 26
-
-// Setup LCD I2C displays
 #define LCD_COLS 16
 #define LCD_ROWS 2
-LiquidCrystal_I2C LCD_1 = LiquidCrystal_I2C(0x27, LCD_COLS, LCD_ROWS);
-LiquidCrystal_I2C LCD_2 = LiquidCrystal_I2C(0x26, LCD_COLS, LCD_ROWS);
+// Define I2C addresses for each LCD
+#define LCD_1_ADD 0x27
+#define LCD_2_ADD 0x26
+#define LCD_3_ADD 0x25
+#define LCD_4_ADD 0x24
 
-// Setup global variables for blinking function
-int debounce_time = 0;
-unsigned long debounce_mywait = 50;
-int btn_status = HIGH;
-bool help_status = false;
+// Setup struct for later threaded function
+typedef struct {
+  
+  // This is the GLOBAL declaration; how far from the top is this line compared to the others in a GENERAL sense
+  int row_num = 0;
 
-// Function stubs for picky online programs
-void *print_screen(void *arg);
-void *btn_reader(void *arg);
-void mywait(int timeInMs);
-void better_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2);
-void line_scroller(LiquidCrystal_I2C LCD_target, int line_num, char *message);
-void initial_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2);
+  // This is the LOCAL declaration; on EACH LCD, is this the first or second row
+  // Eventually, we'll do row_num % 2 in order to find which row it'll end up being
+  int line_num = 0;
+
+  // Arduino and the ESP32 REALLY don't like it if you leave this undeclared.
+  // So. This is the boilerplate.
+  LiquidCrystal_I2C LCD = LiquidCrystal_I2C(LCD_1_ADD, LCD_COLS, LCD_ROWS);
+  
+} disp_data_t;
+
+// Function stubs
+void *line_printer(void *args);
 
 void setup() {
-  Serial.begin(SERIAL_BAUD_RATE);
-  
-  // Defined the two led pins as output and the button pin as a type of input
-  pinMode(LED1, OUTPUT);
-  pinMode(BTN_PIN, INPUT);
-  
-  // Initialize LCD screen
-  LCD_1.init();
-  LCD_1.clear();
-  LCD_1.backlight();
-  
-  LCD_2.init();
-  LCD_2.clear();
-  LCD_2.backlight();
-  
-  better_printer(LCD_1, "Welcome!", " ");
+  // put your setup code here, to run once:
 
-  better_printer(LCD_2, "You are a valued", "Student");
-//  LCD_2.setCursor(0, 0);
-//  LCD_2.print("You are a valued");
-//  LCD_2.setCursor(0, 1);
-//  LCD_2.print("Student");
-
+  // Allocate space for display text
+  char **row = (char **)calloc(TOTAL_ROWS, sizeof(char*));
   
+  // Initialize that space as char *
+  for (int i = 0; i < TOTAL_ROWS; i++)
+  {
+      row[i] = (char *)calloc(MAX_STR_LEN, sizeof(char));
+  }
 
-  pthread_t display;
-  pthread_create(&display, NULL, print_screen, NULL);
+  // Initialize each of those char *s as the strings we decide in advance
+  row[0] = "first line";
+  row[1] = "second line";
+  row[2] = "third line";
+  row[3] = "fourth line";
+  row[4] = "fifth line";
+  row[5] = "sixth line";
+  row[6] = "seventh line";
+  row[7] = "eighth line";
+  row[8] = "Getting help, standby";
 
-  pthread_t printert;
-  pthread_create(&printert, NULL, btn_reader, NULL);
+  // Create array of display_data_t structs
+  // This is good for when we pass arguments to threaded functions in the future.
+  disp_data_t disp_data[TOTAL_ROWS];
+
+  /* 
+   *  For loop that assigns each struct (carrying the data for each line)
+   *  their respective line numbers, local LCD line numbers,
+   *  and initializes their LCD object
+  */ 
+  for (int i = 0; i < TOTAL_ROWS; i++) {
+    disp_data[i].row_num = i;
+    disp_data[i].line_num = disp_data[i].row_num % 2;
+    if (i == 0 || i == 1) {
+      disp_data[i].LCD = LiquidCrystal_I2C(LCD_1_ADD, LCD_COLS, LCD_ROWS);
+    }
+    else if (i == 2 || i == 3) {
+      disp_data[i].LCD = LiquidCrystal_I2C(LCD_2_ADD, LCD_COLS, LCD_ROWS);
+    }
+    else if (i == 4 || i == 5) {
+      disp_data[i].LCD = LiquidCrystal_I2C(LCD_3_ADD, LCD_COLS, LCD_ROWS);
+    }
+    else {
+      disp_data[i].LCD = LiquidCrystal_I2C(LCD_4_ADD, LCD_COLS, LCD_ROWS);
+    }
+
+    // Once all the rows for a specific screen are initialized, setup that screen
+    if(i % 2) {
+      (disp_data[i].LCD).init();
+      (disp_data[i].LCD).clear();
+      (disp_data[i].LCD).backlight();
+    }
+  }
+
+  for (int i = 0; i < TOTAL_ROWS; i++) {
+    if(!(i%2)) {
+      (disp_data[i].LCD).setCursor(0, 0);      
+    }
+    else {
+      (disp_data[i].LCD).setCursor(0, 1);
+    }
+    (disp_data[i].LCD).print(row[i]);
+  }
+  
+  free(row);
 }
 
 void loop() {
-  digitalWrite(LED1, digitalRead(BTN_PIN));
+  // put your main code here, to run repeatedly:
 }
 
-void *print_screen(void *arg) {
-  while(true) {
-    better_printer(LCD_1, welcome_bar, current_mesg);
-    mywait(DELAY / 2);
-  }
-}
-
-void *btn_reader(void *arg) {
-  while(true) {
-    if(digitalRead(BTN_PIN)) {
-      strcpy(current_mesg, help_mesg);
-      mywait(DELAY * 15);
-    }
-    else {
-      strcpy(current_mesg, standby_mesg);
-    }
-    mywait(DELAY / 10);
-  }
+void *line_printer(void *args) {
+  
 }
 
 // Credit for function: Furquan and andrewrk in Stack Overflow thread https://stackoverflow.com/questions/1486833/pthread-cond-timedwait
-void mywait(int timeInMs)
-{
+void mywait(int timeInMs) {
+    
     struct timespec timeToWait;
     struct timeval now;
     int rt;
@@ -117,40 +131,4 @@ void mywait(int timeInMs)
     pthread_mutex_lock(&fakeMutex);
     rt = pthread_cond_timedwait(&fakeCond, &fakeMutex, &timeToWait);
     pthread_mutex_unlock(&fakeMutex);
-}
-
-void better_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2) {
-  initial_printer(LCD_target, line_1, line_2);
-  line_scroller(LCD_target, 0, line_1);
-  initial_printer(LCD_target, line_1, line_2);
-  line_scroller(LCD_target, 1, line_2);
-}
-
-void line_scroller(LiquidCrystal_I2C LCD_target, int line_num, char *message) {
-    LCD_target.setCursor(0, line_num);
-  if (strlen(message) < LCD_COLS + 1) {
-    LCD_target.print(message);
-  }
-  else {
-    for(int i = 0; i < strlen(message) - 1; i++) {
-      LCD_target.setCursor(0, line_num);
-      if ((i + (LCD_COLS - 1)) > strlen(message)) {
-        break;
-      }
-      else {
-        for(int j = i; j < i + LCD_COLS; j++){    
-          LCD_target.print(message[j]);
-        }
-      }
-      mywait(DELAY / 3);
-    } 
-  }
-}
-
-void initial_printer(LiquidCrystal_I2C LCD_target, char *line_1, char *line_2) {
-  LCD_target.clear();
-  LCD_target.setCursor(0, 0);
-  LCD_target.print(line_1);
-  LCD_target.setCursor(0, 1);
-  LCD_target.print(line_2);
 }
