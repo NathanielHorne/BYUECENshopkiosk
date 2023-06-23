@@ -19,6 +19,9 @@
 #define LCD_3_ADD 0x25
 #define LCD_4_ADD 0x24
 
+// Setup mutex for LCDs
+pthread_mutex_t LCD_mutex_1 = PTHREAD_MUTEX_INITIALIZER;
+
 // Setup time wait function
 pthread_mutex_t fakeMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t fakeCond = PTHREAD_COND_INITIALIZER;
@@ -38,21 +41,6 @@ typedef struct disp_data_t {
   LiquidCrystal_I2C LCD = LiquidCrystal_I2C(LCD_1_ADD, LCD_COLS, LCD_ROWS);
   
 } disp_data_t;
-
-typedef struct test_data_t {
-  
-  // This is the GLOBAL declaration; how far from the top is this line compared to the others in a GENERAL sense
-  int *row_num;
-
-  // This is the LOCAL declaration; on EACH LCD, is this the first or second row
-  // Eventually, we'll do row_num % 2 in order to find which row it'll end up being
-  int *line_num;
-
-  // Arduino and the ESP32 REALLY don't like it if you leave this undeclared.
-  // So. This is the boilerplate.
-  LiquidCrystal_I2C LCD = LiquidCrystal_I2C(LCD_1_ADD, LCD_COLS, LCD_ROWS);
-  
-} test_data_t;
 
 // Function stubs
 void *line_printer(void *args);
@@ -134,13 +122,22 @@ void loop() {
   // put your main code here, to run repeatedly:
 }
 
-void *line_printer(void *args) {
-  disp_data_t *d_d = (disp_data_t *)(args);
-  (d_d->LCD).clear();
-  (d_d->LCD).backlight();
-  (d_d->LCD).setCursor(0, d_d->line_num);
-  (d_d->LCD).print("Mistborn");
-}
+//void *line_printer(void *args) {
+//  disp_data_t *d_d = (disp_data_t *)(args);
+//
+//  for (int i = 0; i < strlen(row[(d_d->row_num)]); i++) {
+//    for (int j = i; j < LCD_COLS; j++) {
+//      pthread_mutex_lock(&LCD_mutex_1);
+//      (d_d->LCD).setCursor(0, (d_d->row_num));
+//      pthread_mutex_unlock(&LCD_mutex_1);
+//    }
+//  }
+//  
+//  (d_d->LCD).clear();
+//  (d_d->LCD).backlight();
+//  (d_d->LCD).setCursor(0, d_d->line_num);
+//  (d_d->LCD).print("Mistborn");
+//}
 
 // Credit for function: Furquan and andrewrk in Stack Overflow thread https://stackoverflow.com/questions/1486833/pthread-cond-timedwait
 void mywait(int timeInMs) {
