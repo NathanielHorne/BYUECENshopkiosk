@@ -39,6 +39,9 @@ typedef struct disp_data_t {
   // Arduino and the ESP32 REALLY don't like it if you leave this undeclared.
   // So. This is the boilerplate.
   LiquidCrystal_I2C LCD = LiquidCrystal_I2C(LCD_1_ADD, LCD_COLS, LCD_ROWS);
+
+  // This is for when we eventually print
+  int counter = 0;
   
 } disp_data_t;
 
@@ -122,22 +125,23 @@ void loop() {
   // put your main code here, to run repeatedly:
 }
 
-//void *line_printer(void *args) {
-//  disp_data_t *d_d = (disp_data_t *)(args);
-//
+void *line_printer(void *args) {
+  disp_data_t *d_d = (disp_data_t *)(args);
+
 //  for (int i = 0; i < strlen(row[(d_d->row_num)]); i++) {
+//    d_d->counter = 0;
 //    for (int j = i; j < LCD_COLS; j++) {
 //      pthread_mutex_lock(&LCD_mutex_1);
-//      (d_d->LCD).setCursor(0, (d_d->row_num));
+//      (d_d->LCD).setCursor(d_d->counter, (d_d->row_num));
 //      pthread_mutex_unlock(&LCD_mutex_1);
 //    }
 //  }
-//  
-//  (d_d->LCD).clear();
-//  (d_d->LCD).backlight();
-//  (d_d->LCD).setCursor(0, d_d->line_num);
-//  (d_d->LCD).print("Mistborn");
-//}
+  
+  (d_d->LCD).clear();
+  (d_d->LCD).backlight();
+  (d_d->LCD).setCursor(0, d_d->line_num);
+  (d_d->LCD).print("Mistborn");
+}
 
 // Credit for function: Furquan and andrewrk in Stack Overflow thread https://stackoverflow.com/questions/1486833/pthread-cond-timedwait
 void mywait(int timeInMs) {
