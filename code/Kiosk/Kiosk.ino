@@ -24,7 +24,7 @@ pthread_mutex_t fakeMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t fakeCond = PTHREAD_COND_INITIALIZER;
 
 // Setup struct for later threaded function
-typedef struct {
+typedef struct disp_data_t {
   
   // This is the GLOBAL declaration; how far from the top is this line compared to the others in a GENERAL sense
   int row_num = 0;
@@ -38,6 +38,21 @@ typedef struct {
   LiquidCrystal_I2C LCD = LiquidCrystal_I2C(LCD_1_ADD, LCD_COLS, LCD_ROWS);
   
 } disp_data_t;
+
+typedef struct test_data_t {
+  
+  // This is the GLOBAL declaration; how far from the top is this line compared to the others in a GENERAL sense
+  int *row_num;
+
+  // This is the LOCAL declaration; on EACH LCD, is this the first or second row
+  // Eventually, we'll do row_num % 2 in order to find which row it'll end up being
+  int *line_num;
+
+  // Arduino and the ESP32 REALLY don't like it if you leave this undeclared.
+  // So. This is the boilerplate.
+  LiquidCrystal_I2C LCD = LiquidCrystal_I2C(LCD_1_ADD, LCD_COLS, LCD_ROWS);
+  
+} test_data_t;
 
 // Function stubs
 void *line_printer(void *args);
@@ -55,10 +70,10 @@ void setup() {
   }
 
   // Initialize each of those char *s as the strings we decide in advance
-  row[0] = "first line";
-  row[1] = "second line";
-  row[2] = "third line";
-  row[3] = "fourth line";
+  row[0] = "One fish";
+  row[1] = "Two fish";
+  row[2] = "Red fish";
+  row[3] = "Blue fish";
   row[4] = "fifth line";
   row[5] = "sixth line";
   row[6] = "seventh line";
@@ -67,8 +82,7 @@ void setup() {
 
   // Create array of display_data_t structs
   // This is good for when we pass arguments to threaded functions in the future.
-  // disp_data_t *disp_data = (disp_data_t *)calloc(TOTAL_ROWS, sizeof(disp_data));
-    disp_data_t disp_data[TOTAL_ROWS];
+  disp_data_t disp_data[TOTAL_ROWS];
 
   /* 
    *  For loop that assigns each struct (carrying the data for each line)
@@ -108,6 +122,10 @@ void setup() {
     }
     (disp_data[i].LCD).print(row[i]);
   }
+
+  mywait(500);
+
+  line_printer((void *)&disp_data[0]);
   
   free(row);
 }
@@ -117,7 +135,11 @@ void loop() {
 }
 
 void *line_printer(void *args) {
-  
+  disp_data_t *d_d = (disp_data_t *)(args);
+  (d_d->LCD).clear();
+  (d_d->LCD).backlight();
+  (d_d->LCD).setCursor(0, d_d->line_num);
+  (d_d->LCD).print("Mistborn");
 }
 
 // Credit for function: Furquan and andrewrk in Stack Overflow thread https://stackoverflow.com/questions/1486833/pthread-cond-timedwait
