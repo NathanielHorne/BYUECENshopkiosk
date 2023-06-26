@@ -19,6 +19,9 @@
 #define LCD_3_ADD 0x25
 #define LCD_4_ADD 0x24
 
+// Allocate space for display text
+char **row = (char **)calloc(TOTAL_ROWS, sizeof(char*));
+
 // Setup mutex for LCDs
 pthread_mutex_t LCD_mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 
@@ -45,14 +48,15 @@ typedef struct disp_data_t {
   
 } disp_data_t;
 
+// Create array of display_data_t structs
+// This is good for when we pass arguments to threaded functions in the future.
+disp_data_t disp_data[TOTAL_ROWS];
+
 // Function stubs
 void *line_printer(void *args);
 
 void setup() {
   // put your setup code here, to run once:
-
-  // Allocate space for display text
-  char **row = (char **)calloc(TOTAL_ROWS, sizeof(char*));
   
   // Initialize that space as char *
   for (int i = 0; i < TOTAL_ROWS; i++)
@@ -61,19 +65,15 @@ void setup() {
   }
 
   // Initialize each of those char *s as the strings we decide in advance
-  row[0] = "One fish";
-  row[1] = "Two fish";
-  row[2] = "Red fish";
-  row[3] = "Blue fish";
+  row[0] = "From the halls";
+  row[1] = "of Monte Zuma";
+  row[2] = "To the shores";
+  row[3] = "of Tripoli";
   row[4] = "fifth line";
   row[5] = "sixth line";
   row[6] = "seventh line";
   row[7] = "eighth line";
   row[8] = "Getting help, standby";
-
-  // Create array of display_data_t structs
-  // This is good for when we pass arguments to threaded functions in the future.
-  disp_data_t disp_data[TOTAL_ROWS];
 
   /* 
    *  For loop that assigns each struct (carrying the data for each line)
@@ -111,14 +111,19 @@ void setup() {
     else {
       (disp_data[i].LCD).setCursor(0, 1);
     }
-    (disp_data[i].LCD).print(row[i]);
+//    (disp_data[i].LCD).print(row[i]);
   }
 
   mywait(500);
 
-  line_printer((void *)&disp_data[0]);
+  pthread_t first_line;
+
+  pthread_t second_line;
+
+  pthread_create(&first_line, NULL, line_printer, NULL);
+
+  pthread_create(&second_line, NULL, line_printer, NULL);
   
-  free(row);
 }
 
 void loop() {
@@ -128,19 +133,23 @@ void loop() {
 void *line_printer(void *args) {
   disp_data_t *d_d = (disp_data_t *)(args);
 
-//  for (int i = 0; i < strlen(row[(d_d->row_num)]); i++) {
-//    d_d->counter = 0;
-//    for (int j = i; j < LCD_COLS; j++) {
-//      pthread_mutex_lock(&LCD_mutex_1);
-//      (d_d->LCD).setCursor(d_d->counter, (d_d->row_num));
-//      pthread_mutex_unlock(&LCD_mutex_1);
-//    }
-//  }
+  while(true) {
+    for (int i = 0; i < strlen(row[(d_d->row_num)]); i++) {
+      d_d->counter = 0;
+      for (int j = i; j < LCD_COLS; j++) {
+        pthread_mutex_lock(&LCD_mutex_1);
+        (d_d->LCD).setCursor(d_d->counter, (d_d->row_num));
+        pthread_mutex_unlock(&LCD_mutex_1);
+      }
+    }
+  }
+
+  mywait(500);
   
-  (d_d->LCD).clear();
-  (d_d->LCD).backlight();
-  (d_d->LCD).setCursor(0, d_d->line_num);
-  (d_d->LCD).print("Mistborn");
+//  (d_d->LCD).clear();
+//  (d_d->LCD).backlight();
+//  (d_d->LCD).setCursor(0, d_d->line_num);
+//  (d_d->LCD).print("Mistborn");
 }
 
 // Credit for function: Furquan and andrewrk in Stack Overflow thread https://stackoverflow.com/questions/1486833/pthread-cond-timedwait
