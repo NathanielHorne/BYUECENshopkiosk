@@ -3,14 +3,17 @@
 #include <string.h>
 #include "painlessMesh.h"
 
-#define   MESH_PREFIX     "whateverYouLike"
-#define   MESH_PASSWORD   "somethingSneaky"
-#define   MESH_PORT       5555
+#define   MESH_PREFIX             "whateverYouLike"
+#define   MESH_PASSWORD           "somethingSneaky"
+#define   MESH_PORT               5555
 
-#define   BUTTON_PIN      21
-#define   LED_PIN         17
-#define   BOUNCING_DELAY  175
-#define   MAX_STR_LEN     256
+#define   BUTTON_PIN              21
+#define   LED_PIN                 17
+#define   BOUNCING_DELAY          175
+#define   MAX_STR_LEN             256
+
+#define   NO_HELP_NEEDED_STRING   "No help needed."
+#define   HELP_NEEDED_STRING      "I need help!"
 
 char *no_help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
 
@@ -70,9 +73,9 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  no_help_needed = "No help needed";
+  no_help_needed = NO_HELP_NEEDED_STRING;
 
-  help_needed = "Help needed!";
+  help_needed = HELP_NEEDED_STRING;
 
   current_msg = no_help_needed;
   
