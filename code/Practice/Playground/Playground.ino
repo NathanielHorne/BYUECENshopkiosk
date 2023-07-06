@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include "painlessMesh.h"
 
 #define   MESH_PREFIX     "whateverYouLike"
@@ -7,6 +10,7 @@
 #define   BUTTON_PIN      21
 #define   LED_PIN         17
 #define   BOUNCING_DELAY  175
+#define   MAX_STR_LEN     256
 
 int help_state = LOW;
 
@@ -59,6 +63,14 @@ void setup() {
   pinMode(BUTTON_PIN, INPUT);
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
+
+  char *no_help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
+  no_help_needed = "No help needed";
+
+  char *help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
+  help_needed = "Help needed!";
+
+  char *current_msg = (char *)calloc(MAX_STR_LEN, sizeof(char));
   
 //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
   mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
