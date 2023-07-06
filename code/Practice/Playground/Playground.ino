@@ -12,6 +12,12 @@
 #define   BOUNCING_DELAY  175
 #define   MAX_STR_LEN     256
 
+char *no_help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
+
+char *help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
+
+char *current_msg = (char *)calloc(MAX_STR_LEN, sizeof(char));
+
 int help_state = LOW;
 
 Scheduler userScheduler; // to control your personal task
@@ -64,13 +70,11 @@ void setup() {
   pinMode(LED_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
 
-  char *no_help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
   no_help_needed = "No help needed";
 
-  char *help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
   help_needed = "Help needed!";
 
-  char *current_msg = (char *)calloc(MAX_STR_LEN, sizeof(char));
+  current_msg = no_help_needed;
   
 //mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
   mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
