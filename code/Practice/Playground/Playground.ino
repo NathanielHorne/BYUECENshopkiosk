@@ -66,6 +66,16 @@ void button_function() {
   digitalWrite(LED_PIN, help_state); 
 }
 
+void help_state_printer() {
+  if(help_state) {
+    current_msg = help_needed;
+  }
+  else {
+    current_msg = no_help_needed;
+  }
+  Serial.println(current_msg);
+}
+
 void setup() {
   Serial.begin(115200);
 
@@ -95,5 +105,6 @@ void setup() {
 void loop() {
   // it will run the user scheduler as well
   button_function();
+  help_state_printer();
   mesh.update();
 }
