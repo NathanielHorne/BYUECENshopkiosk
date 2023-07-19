@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "painlessMesh.h"
+#include "Playground.h"
 
 #define   MESH_PREFIX             "whateverYouLike"
 #define   MESH_PASSWORD           "somethingSneaky"
@@ -52,27 +53,6 @@ void nodeTimeAdjustedCallback(int32_t offset) {
     Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
 }
 
-void button_function() {
-  if(digitalRead(BUTTON_PIN)) {
-    delay(BOUNCING_DELAY);
-    if(digitalRead(BUTTON_PIN)) {
-      help_state = !help_state;
-    }
-  }
-  
-  digitalWrite(LED_PIN, help_state); 
-}
-
-void help_state_printer() {
-  if(help_state) {
-    current_msg = help_needed;
-  }
-  else {
-    current_msg = no_help_needed;
-  }
-  Serial.println(current_msg);
-}
-
 void setup() {
   Serial.begin(115200);
 
@@ -104,4 +84,25 @@ void loop() {
   button_function();
   help_state_printer();
   mesh.update();
+}
+
+void button_function() {
+  if(digitalRead(BUTTON_PIN)) {
+    delay(BOUNCING_DELAY);
+    if(digitalRead(BUTTON_PIN)) {
+      help_state = !help_state;
+    }
+  }
+  
+  digitalWrite(LED_PIN, help_state); 
+}
+
+void help_state_printer() {
+  if(help_state) {
+    current_msg = help_needed;
+  }
+  else {
+    current_msg = no_help_needed;
+  }
+  Serial.println(current_msg);
 }
