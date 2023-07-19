@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include "painlessMesh.h"
 #include "Playground.h"
+#include "mesh_backends.h"
+#include "string_declarations.h"
 
 #define   MESH_PREFIX             "whateverYouLike"
 #define   MESH_PASSWORD           "somethingSneaky"
@@ -11,47 +11,13 @@
 #define   BUTTON_PIN              21
 #define   LED_PIN                 17
 #define   BOUNCING_DELAY          175
-#define   MAX_STR_LEN             256
 
 #define   NO_HELP_NEEDED_STRING   "No help needed."
 #define   HELP_NEEDED_STRING      "I need help!"
 
-char *no_help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
-
-char *help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
-
-char *current_msg = (char *)calloc(MAX_STR_LEN, sizeof(char));
-
-int help_state = LOW;
-
-Scheduler userScheduler; // to control your personal task
-painlessMesh  mesh;
-
-// User stub
-void sendMessage() ; // Prototype so PlatformIO doesn't complain
-
 Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
 
-void sendMessage() {
-  mesh.sendBroadcast( current_msg );
-}
-
-// Needed for painless library
-void receivedCallback( uint32_t from, String &msg ) {
-  Serial.printf("startHere: Received from %u msg=%s\n", from, msg.c_str());
-}
-
-void newConnectionCallback(uint32_t nodeId) {
-    Serial.printf("--> startHere: New Connection, nodeId = %u\n", nodeId);
-}
-
-void changedConnectionCallback() {
-  Serial.printf("Changed connections\n");
-}
-
-void nodeTimeAdjustedCallback(int32_t offset) {
-    Serial.printf("Adjusted time %u. Offset = %d\n", mesh.getNodeTime(),offset);
-}
+int help_state = LOW;
 
 void setup() {
   Serial.begin(115200);
@@ -65,15 +31,6 @@ void setup() {
   help_needed = HELP_NEEDED_STRING;
 
   current_msg = no_help_needed;
-  
-//mesh.setDebugMsgTypes( ERROR | MESH_STATUS | CONNECTION | SYNC | COMMUNICATION | GENERAL | MSG_TYPES | REMOTE ); // all types on
-  mesh.setDebugMsgTypes( ERROR | STARTUP );  // set before init() so that you can see startup messages
-
-  mesh.init( MESH_PREFIX, MESH_PASSWORD, &userScheduler, MESH_PORT );
-  mesh.onReceive(&receivedCallback);
-  mesh.onNewConnection(&newConnectionCallback);
-  mesh.onChangedConnections(&changedConnectionCallback);
-  mesh.onNodeTimeAdjusted(&nodeTimeAdjustedCallback);
 
   userScheduler.addTask( taskSendMessage );
   taskSendMessage.enable();
