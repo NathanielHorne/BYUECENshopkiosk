@@ -38,6 +38,14 @@ void sendMessage() {
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg ) {
   Serial.printf("startHere: Received from %u msg=%s\n", from, msg.c_str());
+
+  if (msg == help_needed) {
+    help_state = HIGH;
+  }
+
+  if (msg == no_help_needed) {
+    help_state = LOW;
+  }
 }
 
 void newConnectionCallback(uint32_t nodeId) {
