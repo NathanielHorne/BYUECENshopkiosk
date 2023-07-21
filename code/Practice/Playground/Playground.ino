@@ -4,6 +4,8 @@
 #include <string.h>
 #include "painlessMesh.h"
 
+StaticJsonDocument<800> doc;
+
 #define   MESH_PREFIX             "whateverYouLike"
 #define   MESH_PASSWORD           "somethingSneaky"
 #define   MESH_PORT               5555
@@ -16,29 +18,51 @@
 #define   NO_HELP_NEEDED_STRING   "No help needed."
 #define   HELP_NEEDED_STRING      "I need help!"
 
+char *node_name = (char *)calloc(MAX_STR_LEN, sizeof(char));
+
+char *client_node_name = (char *)calloc(MAX_STR_LEN, sizeof(char));
+
 char *no_help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
 
 char *help_needed = (char *)calloc(MAX_STR_LEN, sizeof(char));
 
 char *current_msg = (char *)calloc(MAX_STR_LEN, sizeof(char));
 
+char *client_current_msg = (char *)calloc(MAX_STR_LEN, sizeof(char));
+
 int help_state = LOW;
+
+int client_help_state = LOW;
 
 Scheduler userScheduler; // to control your personal task
 painlessMesh  mesh;
 
+String get_msgs() {
+  
+}
+
 // User stub
-void sendMessage() ; // Prototype so PlatformIO doesn't complain
-
-Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
-
 void sendMessage() {
   mesh.sendBroadcast( current_msg );
 }
 
+Task taskSendMessage( TASK_SECOND * 1 , TASK_FOREVER, &sendMessage );
+
 // Needed for painless library
 void receivedCallback( uint32_t from, String &msg ) {
   Serial.printf("startHere: Received from %u msg=%s\n", from, msg.c_str());
+  
+  DeserializationError error = deserializeJson(doc, msg);
+
+  if (error) {
+    Serial.print("deserializeJson() failed: ");
+    Serial.println(error.c_str());
+    return;
+  }
+  
+  client_node_name = doc["node"]; // "how many characters do I need in order to achieve 250 words in ...
+  const char* client_current_msg = doc["current_msg"]; // "how many characters do I need in order to achieve 250 words in this ...
+  int client_help_state = doc["help_state"]; // 5
 }
 
 void newConnectionCallback(uint32_t nodeId) {
